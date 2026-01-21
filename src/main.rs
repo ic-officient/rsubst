@@ -6,8 +6,18 @@ use std::{
 };
 
 fn main() {
-    let template = if let Some(path) = env::args().nth(1) {
-        fs::read_to_string(&path).expect("Failed to read template file")
+    let mut args: Vec<String> = env::args().skip(1).collect();
+    let mut env_file = None;
+
+    if let Some(pos) = args.iter().position(|arg| arg == "--env-file" || arg == "-e") {
+        if pos + 1 < args.len() {
+            env_file = Some(args.remove(pos + 1));
+            args.remove(pos);
+        }
+    }
+
+    let template = if let Some(path) = args.first() {
+        fs::read_to_string(path).expect("Failed to read template file")
     } else {
         let mut input = String::new();
         io::stdin()
@@ -23,7 +33,21 @@ fn main() {
     let tmpl = env
         .get_template("template")
         .expect("Failed to get template");
-    let ctx = env::vars().collect::<HashMap<_, _>>();
+
+    let mut ctx = env::vars().collect::<HashMap<_, _>>();
+
+    if let Some(path) = env_file {
+        let content = fs::read_to_string(path).expect("Failed to read environment file");
+        for line in content.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Some((key, value)) = line.split_once('=') {
+                ctx.insert(key.trim().to_string(), value.trim().to_string());
+            }
+        }
+    }
 
     let output = tmpl.render(&ctx).expect("Failed to render template");
     println!("{}", output);

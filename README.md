@@ -18,6 +18,7 @@
 - Access to [built-in filters](https://docs.rs/minijinja/latest/minijinja/filters/index.html)
 - Lightweight and fast execution
 - Built with Rust for efficiency and reliability
+- Options to use environment variables from a file (`--env-file`) to override environment variables from the shell
 
 ## Installation
 
@@ -71,7 +72,13 @@ Basic usage:
 rsubst output.conf.j2 > output.conf
 ```
 
-With environment variables:
+With environment variables from a file:
+
+```shell
+rsubst --env-file vars.env output.conf.j2 > output.conf
+```
+
+With environment variables from shell:
 
 ```shell
 export APP_ENV=production
